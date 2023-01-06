@@ -78,3 +78,13 @@ func GetBookmarks(ctx context.Context, id string) (*GetResponse, error) {
 
 	return &GetResponse{Bookmarks: bookmarks}, nil
 }
+
+// Delete deletes a bookmark.
+// encore:api public method=DELETE path=/bookmark/:id
+func DeleteBookmark(ctx context.Context, id string) error {
+	_, err := sqldb.Exec(ctx, `
+		DELETE FROM bookmark
+		WHERE id = $1
+	`, id)
+	return err
+}
