@@ -3,6 +3,7 @@ package bookmark
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"encore.dev/beta/auth"
@@ -108,4 +109,40 @@ func DeleteBookmark(ctx context.Context, id string) error {
 		AND owner = $2
 	`, id, owner)
 	return err
+}
+
+type CheckResponse struct {
+	ID  uuid.UUID
+	URL string
+}
+
+// Check if a bookmark exists.
+// encore:api auth method=GET path=/has-bookmark/*url
+func HasBookmark(ctx context.Context, url string) (*CheckResponse, error) {
+	// If the url does not start with "http:" or "https:", default to "https:".
+	if !strings.HasPrefix(url, "http:") && !strings.HasPrefix(url, "https:") {
+		url = "https://" + url
+	}
+
+	// get current user id
+	uid, ok := auth.UserID()
+	if !ok {
+		return nil, fmt.Errorf("no user id")
+	}
+
+	owner := "github-" + uid
+
+	row := sqldb.QueryRow(ctx, `
+		SELECT id
+		FROM bookmark
+		WHERE url = $1
+		AND owner = $2
+	`, url, owner)
+
+	var id uuid.UUID
+	if err := row.Scan(&id); err != nil {
+		return nil, err
+	}
+
+	return &CheckResponse{ID: id, URL: url}, nil
 }
