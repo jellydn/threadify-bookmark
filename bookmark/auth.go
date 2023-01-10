@@ -18,7 +18,7 @@ type Data struct {
 //
 //encore:authhandler
 func AuthHandler(ctx context.Context, tokenString string) (auth.UID, *Data, error) {
-	key := []byte("Test")
+	key := secrets.JwtSecret
 
 	// Parse and decrypt the Json web token
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
